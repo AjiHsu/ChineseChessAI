@@ -1,0 +1,4 @@
+1. Position evaluate
+2. Restrict movement (about the total mobility) (if King is under attack)
+3. Under attack
+4. Under protect
