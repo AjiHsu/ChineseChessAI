@@ -200,7 +200,7 @@ public class ChineseChessAI {
     }
 
     // for only valid move
-    private static ArrayList<int[]> generateAvailableMove(Group turn) {
+    private static ArrayList<int[]> generateAvailableMove(int[][] boardPiece, int[][] boardGroup, Group turn) {
         return null; // todo generate all move { i1, j1, i2, j2 };
     }
     // ----------end generate move---------
@@ -281,7 +281,7 @@ public class ChineseChessAI {
             return evaluate(boardPiece, boardGroup, turn);
         }
 
-        ArrayList<int[]> moves = generateAvailableMove(turn);
+        ArrayList<int[]> moves = generateAvailableMove(boardPiece, boardGroup, turn);
         int max = Integer.MIN_VALUE;
 
         for (int[] move : moves) {
@@ -323,7 +323,7 @@ public class ChineseChessAI {
 
     // can be called by main----------
     public static int[] bestMove(int[][] boardPiece, int[][] boardGroup, Group turn, int deep) { // recursion return { i1, i2, j1, j2 }
-        ArrayList<int[]> moves = generateAvailableMove(turn);
+        ArrayList<int[]> moves = generateAvailableMove(boardPiece, boardGroup, turn);
         int max = Integer.MIN_VALUE;
         int[] ansMove = null;
 
