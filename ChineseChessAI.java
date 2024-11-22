@@ -1,13 +1,14 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ChineseChessAI {
     // ----------type define-----------
-    static enum Group {
+    enum Group {
         RED, BLACK, EMPTY
     }
 
-    static enum Piece {
+    enum Piece {
         KING, ADVISOR, ELEPHANT, CHARIOT, HORSE, CANNON, SOLDIER, EMPTY
     }
     // ----------end type define----------
@@ -181,17 +182,105 @@ public class ChineseChessAI {
     // ----------
 
     // ----------generate move // only for method "generateMove"----------
-    int[] kingMoveI = { 0, 0, 1, -1 };
-    int[] kingMoveJ = { 1, -1, 0, 0 };
-    int[] advisorMoveI = { 1, 1, -1, -1 };
-    int[] advisorMoveJ = { 1, -1, 1, -1 };
-    int[] elephantMoveI = { 2, 2, -2, -2 };
-    int[] elephantMoveJ = { 2, -2, 2, -2 };
+    static int[] kingMoveI = { 0, 0, 1, -1 };
+    static int[] kingMoveJ = { 1, -1, 0, 0 };
+    static int[] advisorMoveI = { 1, 1, -1, -1 };
+    static int[] advisorMoveJ = { 1, -1, 1, -1 };
+    static int[] elephantMoveI = { 2, 2, -2, -2 };
+    static int[] elephantMoveJ = { 2, -2, 2, -2 };
     // special method for chariot move
-    int[] horseMoveI = { 1, 1, -1, -1, 2, 2, -2, -2 };
-    int[] horseMoveJ = { 2, -2, 2, -2, 1, -1, 1, -1 };
+    static int[] horseMoveI = { 1, 1, -1, -1, 2, 2, -2, -2 };
+    static int[] horseMoveJ = { 2, -2, 2, -2, 1, -1, 1, -1 };
     // special method for cannon move // special method for cannon eat
     // special method for horse move
+
+    private static ArrayList<int[]> generateSingleMoves(Piece piece, int i, int j, int[][] boardPiece, Group turn) { // todo
+        ArrayList<int[]> moves = new ArrayList<>();
+        int[] dirI = { 0, 0, 1, -1 };
+        int[] dirJ = { 1, -1, 0, 0 };
+        switch (piece) {
+            case KING:
+                for (int k = 0; k < 4; k++) {
+                    int ii = i + kingMoveI[k];
+                    int jj = j + kingMoveJ[k];
+                    if (inBound(ii, jj)) {
+                        moves.add(new int[] {ii, jj});
+                    }
+                }
+                break;
+            case ADVISOR:
+                for (int k = 0; k < 4; k++) {
+                    int ii = i + advisorMoveI[k];
+                    int jj = j + advisorMoveJ[k];
+                    if (inBound(ii, jj)) {
+                        moves.add(new int[] {ii, jj});
+                    }
+                }
+                break;
+            case ELEPHANT:
+                for (int k = 0; k < 4; k++) {
+                    int ii = i + elephantMoveI[k];
+                    int jj = j + elephantMoveJ[k];
+                    if (inBound(ii, jj)) {
+                        moves.add(new int[] {ii, jj});
+                    }
+                }
+                break;
+            case CHARIOT:
+                for (int k = 0; k < 4; k++) {
+                    int ti = i, tj = j;
+                    while (inBound(ti += dirI[k], tj += dirJ[k]) && boardPiece[ti][tj] == Piece.EMPTY.ordinal()) {
+                        moves.add(new int[] {ti, tj});
+                    }
+                    if (inBound(ti, tj)) moves.add(new int[] {ti, tj}); // under protect or attack
+                }
+                break;
+            case HORSE:
+                for (int k = 0; k < 8; k++) {
+                    int ii = i + horseMoveI[k];
+                    int jj = j + horseMoveJ[k];
+                    if (inBound(ii, jj)) {
+                        moves.add(new int[] {ii, jj});
+                    }
+                }
+                break;
+            case CANNON:
+                for (int k = 0; k < 4; k++) {
+                    int ti = i, tj = j;
+                    while (inBound(ti += dirI[k], tj += dirJ[k]) && boardPiece[ti][tj] == Piece.EMPTY.ordinal()) {
+                        moves.add(new int[] {ti, tj});
+                    }
+                    if (inBound(ti, tj)) {
+                        while (inBound(ti += dirI[k], tj += dirJ[k]) && boardPiece[ti][tj] == Piece.EMPTY.ordinal());
+                        if (inBound(ti, tj)) moves.add(new int[] {ti, tj}); // under attack or protect
+                    }
+                }
+                break;
+            case SOLDIER:
+                if (turn == Group.RED) {
+                    if (i >= 5) moves.add(new int[] { i - 1, j });
+                    else {
+                        if (inBound(i - 1, j)) moves.add(new int[] { i - 1, j });
+                        if (inBound(i, j + 1)) moves.add(new int[] { i, j + 1 });
+                        if (inBound(i, j - 1)) moves.add(new int[] { i, j - 1 });
+                    }
+                } else if (turn == Group.BLACK) {
+                    if (i <= 4) moves.add(new int[] { i + 1, j });
+                    else {
+                        if (inBound(i + 1, j)) moves.add(new int[] { i + 1, j });
+                        if (inBound(i, j + 1)) moves.add(new int[] { i, j + 1 });
+                        if (inBound(i, j - 1)) moves.add(new int[] { i, j - 1 });
+                    }
+                } else {
+                    System.err.println("Wrong turn at generateSingleMoves");
+                    System.exit(1);
+                }
+                break;
+            default:
+                break;
+        }
+        return moves;
+    }
 
     // for all move (including self group : to evaluate protect score)
     private static ArrayList<int[]> generateMove(int[][] boardPiece, int[][] boardGroup, int i, int j, boolean underDKing) {
@@ -201,18 +290,68 @@ public class ChineseChessAI {
 
     // for only valid move
     private static ArrayList<int[]> generateAvailableMove(int[][] boardPiece, int[][] boardGroup, Group turn) {
-        return null; // todo generate all move { i1, j1, i2, j2 };
+        ArrayList<int[]> allMoves = new ArrayList<>();
+        boolean underDKing = checkUnderDKing(boardPiece, boardGroup, turn);
+
+        for (int i = 0; i < boardPiece.length; i++) {
+            for (int j = 0; j < boardPiece[0].length; j++) {
+                ArrayList<int[]> moves = generateMove(boardPiece, boardGroup, i, j, underDKing);
+                for (int[] move : moves) {
+                    if (boardGroup[move[0]][move[1]] != turn.ordinal()) {
+                        allMoves.add(move);
+                    }
+                }
+            }
+        }
+        return allMoves; // generate all move { i1, j1, i2, j2 };
     }
     // ----------end generate move---------
 
     // ----------check if under dKing----------
     // todo can be used in generateMove...
     private static boolean checkUnderDKing(int[][] boardPiece, int[][] boardGroup, Group turn) {
-        return false; // todo
+        // find king position
+        int ki = -1, kj = -1;
+        for (int i = 0; i < boardPiece.length; i++) {
+            for (int j = 0; j < boardPiece[0].length; j++) {
+                if (boardGroup[i][j] == Piece.KING.ordinal() && boardPiece[i][j] == turn.ordinal()) {
+                    ki = i;
+                    kj = j;
+                    break;
+                }
+            }
+        }
+        // error occur
+        if (ki == -1 && kj == -1) {
+            System.err.println("Cannot find king position");
+            System.exit(1);
+        }
+        Group enemyTurn = Group.EMPTY;
+        if (turn == Group.RED) enemyTurn = Group.BLACK;
+        else if (turn == Group.BLACK) enemyTurn = Group.RED;
+        else {
+            System.err.println("Wrong turn at checkUnderDKing");
+            System.exit(1);
+        }
+
+        for (int i = 0; i < boardPiece.length; i++) {
+            for (int j = 0; j < boardPiece[0].length; j++) {
+                if (boardPiece[i][j] != Piece.EMPTY.ordinal()) {
+                    ArrayList<int[]> moves = generateSingleMoves(Piece.values()[boardPiece[i][j]], i, j, boardPiece, enemyTurn);
+                    for (int[] move : moves) {
+                        if (move[0] == ki && move[1] == kj) return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
     // ----------end check----------
 
-    public static int evaluate(int[][] boardPiece, int[][] boardGroup, Group turn) {
+    private static int evaluate(int[][] boardPiece, int[][] boardGroup, Group turn) {
+
+        // todo check end
 
         // piece position & type evaluate
         int posTotalRed = 0, posTotalBlack = 0;
