@@ -301,47 +301,23 @@ public class ChineseChessAI {
     }
     // ----------end generate move---------
 
-    // ----------check if under dKing----------
-    // todo can be used in generateMove...
-    private static boolean checkUnderDKing(int[][] boardPiece, int[][] boardGroup, Group turn) {
-        // find king position
-        int ki = -1, kj = -1;
-        for (int i = 0; i < boardPiece.length; i++) {
-            for (int j = 0; j < boardPiece[0].length; j++) {
-                if (boardGroup[i][j] == Piece.KING.ordinal() && boardPiece[i][j] == turn.ordinal()) {
-                    ki = i;
-                    kj = j;
-                    break;
-                }
-            }
-        }
-
-        if (ki == -1 && kj == -1) { // error occur
-            System.err.println("Cannot find king position");
-            System.exit(1);
-        }
-        Group enemyTurn = Group.EMPTY;
-        if (turn == Group.RED) enemyTurn = Group.BLACK;
-        else if (turn == Group.BLACK) enemyTurn = Group.RED;
+    // ----------check if under kingToKing----------
+    private static boolean kingToKing(int[][] boardPiece, int[] k1, int[] k2) {
+        if (k1[1] != k2[1]) return false;
         else {
-            System.err.println("Wrong turn at checkUnderDKing");
-            System.exit(1);
-        }
-
-        for (int i = 0; i < boardPiece.length; i++) {
-            for (int j = 0; j < boardPiece[0].length; j++) {
-                if (boardPiece[i][j] != Piece.EMPTY.ordinal()) {
-                    ArrayList<int[]> moves = generateSingleMoves(Piece.values()[boardPiece[i][j]], i, j, boardPiece, enemyTurn);
-                    for (int[] move : moves) {
-                        if (move[0] == ki && move[1] == kj) return true;
-                    }
+            if (k1[0] < k2[0]) {
+                for (int i = k1[0] + 1; i < k2[0]; i++) {
+                    if (boardPiece[i][k1[1]] != Piece.EMPTY.ordinal()) return false;
+                }
+            } else {
+                for (int i = k2[0] + 1; i < k1[0]; i++) {
+                    if (boardPiece[i][k1[1]] != Piece.EMPTY.ordinal()) return false;
                 }
             }
         }
-
-        return false;
+        return true;
     }
-    // ----------end check----------
+    // ----------end checkKingToKing----------
 
     private static int evaluate(int[][] boardPiece, int[][] boardGroup, Group turn) {
 
@@ -395,7 +371,6 @@ public class ChineseChessAI {
         // end piece position & type evaluate----------
 
         // piece mobility evaluate | attack & protect evaluate----------
-        boolean underDKing = checkUnderDKing(boardPiece, boardGroup, turn);
         ArrayList<int[]> moves = generateMove(boardPiece, boardGroup, turn);
         ArrayList<int[]> oppositeMoves = generateMove(boardPiece, boardGroup, oppositeTurn);
 
