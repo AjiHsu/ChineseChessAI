@@ -1,4 +1,3 @@
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -15,6 +14,7 @@ public class ChineseChessAI {
 
     // ----------evaluate arrays : static for main test----------
     static int[] pieceEvaluate = { 0, 250, 250, 500, 300, 300, 80};
+    static int[] mobilityEvaluate = { 0, 1, 1, 6, 12, 6, 15 };
 
     static int[][][] kingPositionEvaluate = { { { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
                                                 { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -171,8 +171,6 @@ public class ChineseChessAI {
                                                    { 0, 0, 0, 2, 4, 2, 0, 0, 0 } } };
 
     static int[][][][] positionEvaluate = { kingPositionEvaluate, advisorPositionEvaluate, elephantPositionEvaluate, chariotPositionEvaluate, horsePositionEvaluate, cannonPositionEvaluate, soldierPositionEvaluate };
-
-    static int[] maxMove = { 4, 4, 4, 17, 8, 17, 4 }; // temp
     // ----------end evaluate arrays----------
 
     // ----------
@@ -221,7 +219,7 @@ public class ChineseChessAI {
                 for (int k = 0; k < 4; k++) {
                     int ii = i + elephantMoveI[k];
                     int jj = j + elephantMoveJ[k];
-                    if (inBound(ii, jj)) {
+                    if (inBound(ii, jj) && boardPiece[i + elephantMoveI[k] / 2][j +elephantMoveJ[k] / 2] == Piece.EMPTY.ordinal()) {
                         moves.add(new int[] {ii, jj});
                     }
                 }
@@ -236,10 +234,17 @@ public class ChineseChessAI {
                 }
                 break;
             case HORSE:
-                for (int k = 0; k < 8; k++) {
+                for (int k = 0; k < 4; k++) {
                     int ii = i + horseMoveI[k];
                     int jj = j + horseMoveJ[k];
-                    if (inBound(ii, jj)) {
+                    if (inBound(ii, jj) && boardPiece[i][j + horseMoveJ[k] / 2] == Piece.EMPTY.ordinal()) {
+                        moves.add(new int[] {ii, jj});
+                    }
+                }
+                for (int k = 4; k < 8; k++) {
+                    int ii = i + horseMoveI[k];
+                    int jj = j + horseMoveJ[k];
+                    if (inBound(ii, jj) && boardPiece[i + horseMoveI[k] / 2][j] == Piece.EMPTY.ordinal()) {
                         moves.add(new int[] {ii, jj});
                     }
                 }
@@ -283,26 +288,15 @@ public class ChineseChessAI {
     }
 
     // for all move (including self group : to evaluate protect score)
-    private static ArrayList<int[]> generateMove(int[][] boardPiece, int[][] boardGroup, int i, int j, boolean underDKing) {
-        if (underDKing) return null; // todo
-        else return null; // todo
+    private static ArrayList<int[]> generateMove(int[][] boardPiece, int[][] boardGroup, Group turn) {
+        return null; // todo
     }
 
     // for only valid move
     private static ArrayList<int[]> generateAvailableMove(int[][] boardPiece, int[][] boardGroup, Group turn) {
         ArrayList<int[]> allMoves = new ArrayList<>();
-        boolean underDKing = checkUnderDKing(boardPiece, boardGroup, turn);
+        // todo
 
-        for (int i = 0; i < boardPiece.length; i++) {
-            for (int j = 0; j < boardPiece[0].length; j++) {
-                ArrayList<int[]> moves = generateMove(boardPiece, boardGroup, i, j, underDKing);
-                for (int[] move : moves) {
-                    if (boardGroup[move[0]][move[1]] != turn.ordinal()) {
-                        allMoves.add(move);
-                    }
-                }
-            }
-        }
         return allMoves; // generate all move { i1, j1, i2, j2 };
     }
     // ----------end generate move---------
@@ -321,8 +315,8 @@ public class ChineseChessAI {
                 }
             }
         }
-        // error occur
-        if (ki == -1 && kj == -1) {
+
+        if (ki == -1 && kj == -1) { // error occur
             System.err.println("Cannot find king position");
             System.exit(1);
         }
@@ -351,64 +345,85 @@ public class ChineseChessAI {
 
     private static int evaluate(int[][] boardPiece, int[][] boardGroup, Group turn) {
 
-        // todo check end
+        int maxValue = 10000;
+        double attackWeight = 0.5;
+        double protectWeight = 0.2;
 
-        // piece position & type evaluate
-        int posTotalRed = 0, posTotalBlack = 0;
-        int typeTotalRed = 0, typeTotalBlack = 0;
-        for (int i = 0; i < boardPiece.length; i++) {
-            for (int j = 0; j < boardPiece[i].length; j++) {
-                if (boardGroup[i][j] == Group.RED.ordinal() && boardGroup[i][j] != Piece.EMPTY.ordinal()) {
-                    posTotalRed += positionEvaluate[boardPiece[i][j]][boardGroup[i][j]][i][j];
-                    typeTotalRed += pieceEvaluate[boardPiece[i][j]];
-                } else if (boardGroup[i][j] == Group.BLACK.ordinal()) {
-                    posTotalBlack += positionEvaluate[boardPiece[i][j]][boardGroup[i][j]][i][j];
-                    typeTotalBlack += pieceEvaluate[boardPiece[i][j]];
-                }
-            }
-        }
-        System.out.println("position evaluate:");
-        System.out.println("RED:" + posTotalRed + "BLACK:" + posTotalBlack);
-
-        System.out.println("type evaluate:");
-        System.out.println("RED:" + typeTotalRed + "BLACK:" + typeTotalBlack);
-        // end piece position & type evaluate
-
-        // piece mobility restrict
-        // under attack
-        // under protect
-        // end the game : eva = -inf or inf
-        int mobilityRed = 0, mobilityBlack = 0;
-        boolean underDKing = checkUnderDKing(boardPiece, boardGroup, turn);
-        // ifUnderDKing
-        for (int i = 0; i < boardPiece.length; i++) {
-            for (int j = 0; j < boardPiece[i].length; j++) {
-                ArrayList<int[]> moves = generateMove(boardPiece, boardGroup, i, j, underDKing);
-                for (int[] move : moves) {
-                    // type evaluate
-                    if (boardGroup[move[0]][move[1]] == Group.EMPTY.ordinal()) {
-                        // todo add to mobility evaluate
-                    } else if (boardGroup[move[0]][move[1]] != boardGroup[i][j]) {
-                        // todo add extra attacking evaluate
-                    } else { // self group
-                        // todo add extra protecting evaluate
-                    }
-
-                    // total move evaluate
-                    // todo maxMove[boardGroup[i][j]] - moves.size();
-                }
-            }
-        }
-        // calculate sum
-        int totalScore = 0;
-        if (turn == Group.BLACK) {
-            // todo
-        } else if (turn == Group.RED) {
-            // todo
-        } else {
-            System.err.println("illegal input \"Group\"---at method : evaluate");
+        // find opposite group----------
+        Group oppositeTurn = Group.EMPTY;
+        if (turn == Group.RED) oppositeTurn = Group.BLACK;
+        else if (turn == Group.BLACK) oppositeTurn = Group.RED;
+        else {
+            System.err.println("Wrong turn at evaluate");
             System.exit(1);
         }
+        // end find opposite group----------
+
+        // position of king----------
+        int[] king = new int[2];
+        int[] oppositeKing = new int[2];
+        for (int i = 0; i < boardPiece.length; i++) {
+            for (int j = 0; j < boardPiece[0].length; j++) {
+                if (boardGroup[i][j] == turn.ordinal()) {
+                    if (boardPiece[i][j] == Piece.KING.ordinal()) {
+                        king[0] = i;
+                        king[1] = j;
+                    }
+                } else if (boardGroup[i][j] == oppositeTurn.ordinal()) {
+                    if (boardPiece[i][j] == Piece.KING.ordinal()) {
+                        oppositeKing[0] = i;
+                        oppositeKing[1] = j;
+                    }
+                }
+            }
+        }
+        // end position of king----------
+
+        // piece position & type evaluate----------
+        int turnTotal = 0, oppositeTurnTotal = 0;
+        for (int i = 0; i < boardPiece.length; i++) {
+            for (int j = 0; j < boardPiece[i].length; j++) {
+                if (boardGroup[i][j] == turn.ordinal() && boardPiece[i][j] != Piece.EMPTY.ordinal()) {
+                    turnTotal += positionEvaluate[boardPiece[i][j]][boardGroup[i][j]][i][j];
+                    turnTotal += pieceEvaluate[boardPiece[i][j]];
+                } else if (boardGroup[i][j] == oppositeTurn.ordinal() && boardPiece[i][j] != Piece.EMPTY.ordinal()) {
+                    oppositeTurnTotal += positionEvaluate[boardPiece[i][j]][boardGroup[i][j]][i][j];
+                    oppositeTurnTotal += pieceEvaluate[boardPiece[i][j]];
+                }
+            }
+        }
+        // end piece position & type evaluate----------
+
+        // piece mobility evaluate | attack & protect evaluate----------
+        boolean underDKing = checkUnderDKing(boardPiece, boardGroup, turn);
+        ArrayList<int[]> moves = generateMove(boardPiece, boardGroup, turn);
+        ArrayList<int[]> oppositeMoves = generateMove(boardPiece, boardGroup, oppositeTurn);
+
+        for (int[] move : moves) {
+            if (boardGroup[move[2]][move[3]] == Group.EMPTY.ordinal()) { // mobile
+                turnTotal += mobilityEvaluate[boardPiece[move[0]][move[1]]];
+            } else if (boardGroup[move[2]][move[3]] == oppositeTurn.ordinal()) { // attack
+                if (boardPiece[move[2]][move[3]] == Piece.KING.ordinal()) return maxValue;
+                else turnTotal += pieceEvaluate[boardPiece[move[2]][move[3]]] * attackWeight;
+            } else if (boardGroup[move[2]][move[3]] == turn.ordinal()) { // protect
+                turnTotal += pieceEvaluate[boardPiece[move[2]][move[3]]] * protectWeight;
+            }
+        }
+
+        for (int[] oppositeMove : oppositeMoves) {
+            if (boardGroup[oppositeMove[2]][oppositeMove[3]] == Group.EMPTY.ordinal()) { // mobile
+                oppositeTurnTotal += mobilityEvaluate[boardPiece[oppositeMove[0]][oppositeMove[1]]];
+            } else if (boardGroup[oppositeMove[2]][oppositeMove[3]] == turn.ordinal()) { // attack
+                if (boardPiece[oppositeMove[2]][oppositeMove[3]] == Piece.KING.ordinal()) oppositeTurnTotal += maxValue;
+                else oppositeTurnTotal += pieceEvaluate[boardPiece[oppositeMove[2]][oppositeMove[3]]] * attackWeight;
+            } else if (boardGroup[oppositeMove[2]][oppositeMove[3]] == oppositeTurn.ordinal()) { // protect
+                oppositeTurnTotal += pieceEvaluate[boardPiece[oppositeMove[2]][oppositeMove[3]]] * protectWeight;
+            }
+        }
+        // end piece mobility evaluate | attack & protect evaluate----------
+
+        // calculate sum
+        int totalScore = turnTotal - oppositeTurnTotal;
 
         return totalScore;
     }
