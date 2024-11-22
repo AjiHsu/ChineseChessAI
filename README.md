@@ -7,5 +7,5 @@
 
 *There is no duplicated code. All code is written by Aji Hsu.*
 ### commits
-#### brief prototype (from local : intellij) -- 2024/11/21
+#### brief prototype (from local : intellij) -- 2024/11/21, 2024/11/22
 #### Readme commit (from remote) -- 2024/11/21
