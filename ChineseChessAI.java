@@ -206,13 +206,9 @@ public class ChineseChessAI {
     static int[] advisorMoveJ = { 1, -1, 1, -1 };
     static int[] elephantMoveI = { 2, 2, -2, -2 };
     static int[] elephantMoveJ = { 2, -2, 2, -2 };
-    static int[] elephantConfI = { 1, 1, -1, -1};
-    static int[] elephantConfJ = { 1, -1, 1, -1 };
     // special method for chariot move
     static int[] horseMoveI = { 1, 1, -1, -1, 2, 2, -2, -2 };
     static int[] horseMoveJ = { 2, -2, 2, -2, 1, -1, 1, -1 };
-    static int[] horseConfI = { 0, 0, 0, 0, 1, 1, -1, -1 };
-    static int[] horseConfJ = { 1, -1, 1, -1, 0, 0, 0, 0 };
     // special method for cannon move // special method for cannon eat
     // special method for horse move
 
@@ -314,7 +310,14 @@ public class ChineseChessAI {
 
     // for all move (including self group : to evaluate protect score)
     private static ArrayList<int[]> generateMove(int[][] boardPiece, int[][] boardGroup, Group turn) {
-        return null; // todo
+        ArrayList<int[]> moves = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 9; j++) {
+                ArrayList<int[]> singleMoves = generateSingleMoves(Piece.values()[boardPiece[i][j]], i, j, boardPiece, turn);
+                moves.addAll(singleMoves);
+            }
+        }
+        return moves;
     }
 
     // for only valid move
