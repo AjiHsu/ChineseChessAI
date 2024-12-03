@@ -177,6 +177,26 @@ public class ChineseChessAI {
     private static boolean inBound(int i, int j) {
         return (0 <= i && i < 10 && 0 <= j && j < 9);
     }
+    private static boolean inBound3x3(int i, int j, int group) {
+        switch (group) {
+            case 0:
+                return i >= 7 && i <= 9 && j >= 3 && j <= 5;
+            case 1:
+                return i >= 0 && i <= 2 && j >= 3 && j <= 5;
+            default:
+                return false;
+        }
+    }
+    private static boolean inBoundHalf(int i, int j, int group) {
+        switch (group) {
+            case 0:
+                return i >= 5 && i <= 9 && j >= 0 && j <= 8;
+            case 1:
+                return i >= 0 && i <= 4 && j >= 0 && j <= 8;
+            default:
+                return false;
+        }
+    }
     // ----------
 
     // ----------generate move // only for method "generateMove"----------
@@ -186,12 +206,17 @@ public class ChineseChessAI {
     static int[] advisorMoveJ = { 1, -1, 1, -1 };
     static int[] elephantMoveI = { 2, 2, -2, -2 };
     static int[] elephantMoveJ = { 2, -2, 2, -2 };
+    static int[] elephantConfI = { 1, 1, -1, -1};
+    static int[] elephantConfJ = { 1, -1, 1, -1 };
     // special method for chariot move
     static int[] horseMoveI = { 1, 1, -1, -1, 2, 2, -2, -2 };
     static int[] horseMoveJ = { 2, -2, 2, -2, 1, -1, 1, -1 };
+    static int[] horseConfI = { 0, 0, 0, 0, 1, 1, -1, -1 };
+    static int[] horseConfJ = { 1, -1, 1, -1, 0, 0, 0, 0 };
     // special method for cannon move // special method for cannon eat
     // special method for horse move
 
+    // generate all inBound moves
     private static ArrayList<int[]> generateSingleMoves(Piece piece, int i, int j, int[][] boardPiece, Group turn) { // todo
         ArrayList<int[]> moves = new ArrayList<>();
         int[] dirI = { 0, 0, 1, -1 };
@@ -201,7 +226,7 @@ public class ChineseChessAI {
                 for (int k = 0; k < 4; k++) {
                     int ii = i + kingMoveI[k];
                     int jj = j + kingMoveJ[k];
-                    if (inBound(ii, jj)) {
+                    if (inBound3x3(ii, jj, turn.ordinal())) {
                         moves.add(new int[] {ii, jj});
                     }
                 }
@@ -210,7 +235,7 @@ public class ChineseChessAI {
                 for (int k = 0; k < 4; k++) {
                     int ii = i + advisorMoveI[k];
                     int jj = j + advisorMoveJ[k];
-                    if (inBound(ii, jj)) {
+                    if (inBound3x3(ii, jj, turn.ordinal())) {
                         moves.add(new int[] {ii, jj});
                     }
                 }
@@ -219,7 +244,7 @@ public class ChineseChessAI {
                 for (int k = 0; k < 4; k++) {
                     int ii = i + elephantMoveI[k];
                     int jj = j + elephantMoveJ[k];
-                    if (inBound(ii, jj) && boardPiece[i + elephantMoveI[k] / 2][j +elephantMoveJ[k] / 2] == Piece.EMPTY.ordinal()) {
+                    if (inBoundHalf(ii, jj, turn.ordinal()) && boardPiece[i + elephantMoveI[k] / 2][j +elephantMoveJ[k] / 2] == Piece.EMPTY.ordinal()) {
                         moves.add(new int[] {ii, jj});
                     }
                 }
