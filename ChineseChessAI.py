@@ -417,8 +417,7 @@ def generateValidMove(boardPiece, boardGroup, turn):
     return resMov
 
 def evaluate(boardPiece, boardGroup, turn):
-    print("____start evaluate____")
-    maxValue = 10000
+    maxValue = 100000
     attackWeight = 0.5
     protectWeight = 0.2
 
@@ -486,7 +485,6 @@ def evaluate(boardPiece, boardGroup, turn):
 
     # calculate sum
     totalScore = turnTotal - oppositeTurnTotal
-    print("____end evaluate____")
     return totalScore
 
 
@@ -496,7 +494,7 @@ def scoreDFS(boardPiece, boardGroup, turn, deep):
 
     moves = generateValidMove(boardPiece, boardGroup, turn)
 
-    bestScore = -10000
+    bestScore = -100000
     bestMove = None
     for move in moves:
         newBoardPiece = copy.deepcopy(boardPiece)
@@ -516,7 +514,7 @@ def scoreDFS(boardPiece, boardGroup, turn, deep):
 
 def bestMove(boardPiece, boardGroup, turn, deep):
     moves = generateValidMove(boardPiece, boardGroup, turn)
-    bestScore = -10000
+    bestScore = -100000
     bestMove = None
     for move in moves:
         newBoardPiece = copy.deepcopy(boardPiece)
@@ -533,32 +531,61 @@ def bestMove(boardPiece, boardGroup, turn, deep):
             bestMove = move
     return bestMove
 
+def shallowBestMove(boardPiece, boardGroup, turn):
+    moves = generateValidMove(boardPiece, boardGroup, turn)
+    bestScore = 100000
+    bestMove = None
+    for move in moves:
+
+        ep1 = boardPiece[move[0]][move[1]]
+        eg1 = boardGroup[move[0]][move[1]]
+        ep2 = boardPiece[move[2]][move[3]]
+        eg2 = boardGroup[move[2]][move[3]]
+
+        boardPiece[move[2]][move[3]] = boardPiece[move[0]][move[1]]
+        boardGroup[move[2]][move[3]] = boardGroup[move[0]][move[1]]
+        boardPiece[move[0]][move[1]] = 7
+        boardGroup[move[0]][move[1]] = 2
+
+        score = evaluate(boardPiece, boardGroup, 1 - turn)
+
+        boardPiece[move[0]][move[1]] = ep1
+        boardGroup[move[0]][move[1]] = eg1
+        boardPiece[move[2]][move[3]] = ep2
+        boardGroup[move[2]][move[3]] = eg2
+
+        if score < bestScore:
+            bestScore = score
+            bestMove = move
+    return bestMove
+
+#---------------------------------test-----------------------------------------
 boardPiece = [[3, 4, 2, 1, 0, 1, 2, 4, 3],  # 黑車馬象士將士象馬車
  [7, 7, 7, 7, 7, 7, 7, 7, 7],  # 空位
- [7, 5, 7, 7, 7, 7, 7, 5, 7],  # 黑炮
+ [7, 7, 7, 7, 7, 7, 7, 5, 7],  # 黑炮
  [6, 7, 6, 7, 6, 7, 6, 7, 6],  # 黑卒
  [7, 7, 7, 7, 7, 7, 7, 7, 7],  # 空位
  [7, 7, 7, 7, 7, 7, 7, 7, 7],  # 空位
  [6, 7, 6, 7, 6, 7, 6, 7, 6],  # 紅兵
- [7, 5, 7, 7, 7, 7, 7, 5, 7],  # 紅炮
+ [7, 5, 7, 7, 5, 7, 7, 7, 7],  # 紅炮
  [7, 7, 7, 7, 7, 7, 7, 7, 7],  # 空位
- [3, 4, 2, 1, 0, 1, 2, 4, 3]]  # 紅車馬象士帥士象馬車
+ [7, 3, 2, 1, 0, 1, 2, 4, 3]]  # 紅車馬象士帥士象馬車
 
 
 
 
 boardGroup = [[1, 1, 1, 1, 1, 1, 1, 1, 1],  # 黑方
  [2, 2, 2, 2, 2, 2, 2, 2, 2],  # 空位
- [2, 1, 2, 2, 2, 2, 2, 1, 2],  # 黑方炮
+ [2, 2, 2, 2, 2, 2, 2, 1, 2],  # 黑方炮
  [1, 2, 1, 2, 1, 2, 1, 2, 1],  # 黑卒
  [2, 2, 2, 2, 2, 2, 2, 2, 2],  # 空位
  [2, 2, 2, 2, 2, 2, 2, 2, 2],  # 空位
  [0, 2, 0, 2, 0, 2, 0, 2, 0],  # 紅兵
- [2, 0, 2, 2, 2, 2, 2, 0, 2],  # 紅炮
+ [2, 0, 2, 2, 0, 2, 2, 2, 2],  # 紅炮
  [2, 2, 2, 2, 2, 2, 2, 2, 2],  # 空位
- [0, 0, 0, 0, 0, 0, 0, 0, 0]]  # 紅方
+ [2, 0, 0, 0, 0, 0, 0, 0, 0]]  # 紅方
 
 
-turn = 0
+turn = 1
 
-print(bestMove(boardPiece, boardGroup, turn, 2))
+print(shallowBestMove(boardPiece, boardGroup, turn))
