@@ -6,6 +6,7 @@
 * method for evaluating chessboard : [LINK](https://blog.csdn.net/jb80400812/article/details/4174410)
 
 *There is no duplicated code. All code is written by Aji Hsu.*
-### commits
-#### brief prototype (from local : intellij) -- 2024/11/21, 2024/11/22
-#### Readme commit (from remote) -- 2024/11/21
+
+### progress
+* scoreDFS can not analyze deep > 1
+* swallowEvaluate is available.
