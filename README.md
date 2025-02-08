@@ -10,4 +10,3 @@
 ### progress
 * scoreDFS can not analyze deep > 1
 * swallowEvaluate is available.
-* the Java code is not completed
